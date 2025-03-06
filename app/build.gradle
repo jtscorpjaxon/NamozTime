@@ -42,6 +42,10 @@ dependencies {
     implementation 'androidx.activity:activity:1.8.2'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+    // Navigation
+    implementation 'androidx.navigation:navigation-fragment:2.7.7'
+    implementation 'androidx.navigation:navigation-ui:2.7.7'
+
     // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
@@ -56,6 +60,7 @@ dependencies {
 
     // Room
     implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
     annotationProcessor 'androidx.room:room-compiler:2.6.1'
 
     // Retrofit
@@ -65,15 +70,19 @@ dependencies {
 
     // WorkManager
     implementation 'androidx.work:work-runtime:2.9.0'
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
 
     // Location
     implementation 'com.google.android.gms:play-services-location:21.1.0'
 
     // DataStore
     implementation 'androidx.datastore:datastore-preferences:1.0.0'
+    implementation 'androidx.datastore:datastore-preferences-rxjava2:1.0.0'
+    implementation 'androidx.datastore:datastore-preferences-rxjava3:1.0.0'
 
-    // Javapoet
-    implementation 'com.squareup:javapoet:1.13.0'
+    // RxJava
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.8'
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.2'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
