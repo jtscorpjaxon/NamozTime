@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_prayer_times">
+
+    <fragment
+        android:id="@+id/navigation_prayer_times"
+        android:name="uz.jtscorp.namoztime.presentation.fragment.PrayerTimesFragment"
+        android:label="Namoz vaqtlari" />
+
+    <fragment
+        android:id="@+id/navigation_qibla"
+        android:name="uz.jtscorp.namoztime.presentation.fragment.QiblaFragment"
+        android:label="Qibla" />
+
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="uz.jtscorp.namoztime.presentation.fragment.SettingsFragment"
+        android:label="Sozlamalar" />
+
+</navigation> 
