@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 import dagger.hilt.android.AndroidEntryPoint;
 import uz.jtscorp.namoztime.databinding.FragmentQiblaBinding;
 import uz.jtscorp.namoztime.presentation.viewmodel.SettingsViewModel;
-import uz.jtscorp.namoztime.util.QiblaCalculator;
+import uz.jtscorp.namoztime.utils.QiblaCalculator;
 
 import static android.content.Context.SENSOR_SERVICE;
 
@@ -57,8 +57,8 @@ public class QiblaFragment extends Fragment implements SensorEventListener {
                 settings.getLatitude(),
                 settings.getLongitude()
             );
-            binding.tvLocation.setText(settings.getLocation());
-            binding.tvQiblaDegree.setText(String.format("Qibla: %.1f°", qiblaDegree));
+//            binding.tvLocation.setText(settings.getLocation());
+//            binding.tvQiblaDegree.setText(String.format("Qibla: %.1f°", qiblaDegree));
         });
     }
 

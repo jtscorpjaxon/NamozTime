@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import dagger.hilt.android.qualifiers.ApplicationContext;
 import uz.jtscorp.namoztime.R;
 import uz.jtscorp.namoztime.presentation.MainActivity;
 
@@ -25,7 +26,7 @@ public class NotificationHelper {
     private final NotificationManager notificationManager;
 
     @Inject
-    public NotificationHelper(Context context) {
+    public NotificationHelper(@ApplicationContext Context context) {
         this.context = context;
         this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         createNotificationChannel();

@@ -13,7 +13,7 @@ import uz.jtscorp.namoztime.utils.Converters;
         PrayerTime.class,
         NotificationSettings.class
     },
-    version = 1
+    version = 1,exportSchema = false
 )
 @TypeConverters(Converters.class)
 public abstract class AppDatabase extends RoomDatabase {

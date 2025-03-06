@@ -37,8 +37,8 @@ public class PrayerTimeRepository {
         return api.getMonthlyPrayerTimes(latitude, longitude, 3, month, year)
                 .map(mapper::mapToPrayerTimes)
                 .flatMapCompletable(prayerTimes -> Completable.fromAction(() -> {
-                    dao.deleteOldPrayerTimes(prayerTimes.get(0).getDate());
-                    dao.insertAll(prayerTimes);
+//                    dao.deleteOldPrayerTimes(prayerTimes.get(0).getDate());
+//                    dao.insertAll(prayerTimes);
                 }))
                 .subscribeOn(Schedulers.io());
     }

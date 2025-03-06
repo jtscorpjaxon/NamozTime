@@ -9,6 +9,8 @@ import android.os.Looper;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import dagger.hilt.android.qualifiers.ApplicationContext;
+
 @Singleton
 public class AudioHelper {
     private final Context context;
@@ -18,7 +20,7 @@ public class AudioHelper {
     private int previousRingerMode;
 
     @Inject
-    public AudioHelper(Context context) {
+    public AudioHelper(@ApplicationContext Context context) {
         this.context = context;
         this.audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -57,4 +59,4 @@ public class AudioHelper {
     public boolean hasNotificationPolicyAccess() {
         return notificationManager.isNotificationPolicyAccessGranted();
     }
-} 
+}

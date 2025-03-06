@@ -42,7 +42,7 @@ public class PrayerTimesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setupRecyclerView();
-        setupSwipeRefresh();
+      //  setupSwipeRefresh();
         setupObservers();
     }
 
@@ -53,7 +53,7 @@ public class PrayerTimesFragment extends Fragment {
     }
 
     private void setupSwipeRefresh() {
-        binding.swipeRefresh.setOnRefreshListener(() -> viewModel.refreshPrayerTimes());
+     //   binding.swipeRefresh.setOnRefreshListener(() -> viewModel.refreshPrayerTimes());
     }
 
     private void setupObservers() {
@@ -73,9 +73,9 @@ public class PrayerTimesFragment extends Fragment {
             }
         });
 
-        viewModel.isLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            binding.swipeRefresh.setRefreshing(isLoading);
-        });
+//        viewModel.isLoading().observe(getViewLifecycleOwner(), isLoading -> {
+//            binding.swipeRefresh.setRefreshing(isLoading);
+//        });
 
         viewModel.getError().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
