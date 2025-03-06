@@ -1,100 +1,70 @@
 package uz.jtscorp.namoztime.presentation;
 
+import android.app.Application;
+import android.content.Intent;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModel;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
-import uz.jtscorp.namoztime.data.model.NotificationSettings;
+import uz.jtscorp.namoztime.data.entity.Settings;
 import uz.jtscorp.namoztime.domain.repository.NotificationSettingsRepository;
 import uz.jtscorp.namoztime.service.PrayerTimeService;
 
 @HiltViewModel
-public class MainViewModel extends ViewModel {
-    private final PrayerTimeService prayerTimeService;
-    private final NotificationSettingsRepository notificationSettingsRepository;
+public class MainViewModel extends AndroidViewModel {
+    private final NotificationSettingsRepository settingsRepository;
 
     @Inject
     public MainViewModel(
-            PrayerTimeService prayerTimeService,
-            NotificationSettingsRepository notificationSettingsRepository
+            Application application,
+            NotificationSettingsRepository settingsRepository
     ) {
-        this.prayerTimeService = prayerTimeService;
-        this.notificationSettingsRepository = notificationSettingsRepository;
+        super(application);
+        this.settingsRepository = settingsRepository;
     }
 
-    public String getCurrentPrayerTime() {
-        return prayerTimeService.getCurrentPrayerTime();
+    public void startPrayerTimeService() {
+        Intent intent = new Intent(getApplication(), PrayerTimeService.class);
+        getApplication().startService(intent);
     }
 
-
-    public LiveData<NotificationSettings> getNotificationSettings() {
-        return notificationSettingsRepository.getSettings();
+    public void stopPrayerTimeService() {
+        Intent intent = new Intent(getApplication(), PrayerTimeService.class);
+        getApplication().stopService(intent);
     }
 
-    public void updatePrayerTimes(double latitude, double longitude) {
-        prayerTimeService.updatePrayerTimes(latitude, longitude);
+    public LiveData<Settings> getSettings() {
+        return settingsRepository.getSettings();
     }
 
-    public void updateNotificationEnabled(boolean enabled) {
-        NotificationSettings settings = notificationSettingsRepository.getSettings().getValue();
-        if (settings != null) {
-            settings.setEnabled(enabled);
-            notificationSettingsRepository.updateSettings(settings);
-        }
+    public void updateNotificationsEnabled(boolean enabled) {
+        settingsRepository.updateNotificationsEnabled(enabled);
     }
 
     public void updateSilentModeEnabled(boolean enabled) {
-        NotificationSettings settings = notificationSettingsRepository.getSettings().getValue();
-        if (settings != null) {
-            settings.setSilentModeEnabled(enabled);
-            notificationSettingsRepository.updateSettings(settings);
-        }
+        settingsRepository.updateSilentModeEnabled(enabled);
     }
 
     public void updateJumaSettingsEnabled(boolean enabled) {
-        NotificationSettings settings = notificationSettingsRepository.getSettings().getValue();
-        if (settings != null) {
-            settings.setJumaEnabled(enabled);
-            notificationSettingsRepository.updateSettings(settings);
-        }
+        settingsRepository.updateJumaSettingsEnabled(enabled);
     }
 
-    public void updateReminderMinutes(String prayerName, int minutes) {
-        NotificationSettings settings = notificationSettingsRepository.getSettings().getValue();
-        if (settings != null) {
-            switch (prayerName) {
-                case "Bomdod":
-                    settings.setFajrReminderMinutes(minutes);
-                    break;
-                case "Peshin":
-                    settings.setDhuhrReminderMinutes(minutes);
-                    break;
-                case "Asr":
-                    settings.setAsrReminderMinutes(minutes);
-                    break;
-                case "Shom":
-                    settings.setMaghribReminderMinutes(minutes);
-                    break;
-                case "Xufton":
-                    settings.setIshaReminderMinutes(minutes);
-                    break;
-            }
-            notificationSettingsRepository.updateSettings(settings);
-        }
+    public void updateLocation(String location, double latitude, double longitude) {
+        settingsRepository.updateLocation(location, latitude, longitude);
     }
 
-    public void updateJumaTime(String startTime, String endTime) {
-        NotificationSettings settings = notificationSettingsRepository.getSettings().getValue();
-        if (settings != null) {
-            settings.setJumaStartTime(startTime);
-            settings.setJumaEndTime(endTime);
-            notificationSettingsRepository.updateSettings(settings);
-        }
+    public void updateDefaultNotificationDelay(int delay) {
+        settingsRepository.updateDefaultNotificationDelay(delay);
     }
 
-    public String getNextPrayerTime(String currentPrayerTime) {
-        return prayerTimeService.getNextPrayTime(currentPrayerTime);
+    public void updateDefaultSilentModeDuration(int duration) {
+        settingsRepository.updateDefaultSilentModeDuration(duration);
+    }
+
+    public void updateJumaTimes(String startTime, String endTime) {
+        settingsRepository.updateJumaTimes(startTime, endTime);
     }
 }

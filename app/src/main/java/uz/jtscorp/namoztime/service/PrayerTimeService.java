@@ -1,224 +1,148 @@
 package uz.jtscorp.namoztime.service;
 
+import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import androidx.lifecycle.LifecycleService;
+import androidx.annotation.Nullable;
 
-import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
-import uz.jtscorp.namoztime.data.model.PrayerTime;
-import uz.jtscorp.namoztime.domain.repository.NotificationSettingsRepository;
-import uz.jtscorp.namoztime.domain.repository.PrayerTimeRepository;
-import uz.jtscorp.namoztime.utils.NotificationHelper;
-import uz.jtscorp.namoztime.utils.SilentModeHelper;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import uz.jtscorp.namoztime.data.entity.PrayerTime;
+import uz.jtscorp.namoztime.data.entity.Settings;
+import uz.jtscorp.namoztime.data.repository.PrayerTimeRepository;
+import uz.jtscorp.namoztime.data.repository.SettingsRepository;
+import uz.jtscorp.namoztime.util.AudioHelper;
+import uz.jtscorp.namoztime.util.NotificationHelper;
 
 @AndroidEntryPoint
-public class PrayerTimeService extends LifecycleService {
+public class PrayerTimeService extends Service {
     @Inject
     PrayerTimeRepository prayerTimeRepository;
 
     @Inject
-    NotificationSettingsRepository notificationSettingsRepository;
+    SettingsRepository settingsRepository;
 
     @Inject
     NotificationHelper notificationHelper;
 
     @Inject
-    SilentModeHelper silentModeHelper;
+    AudioHelper audioHelper;
 
-    private Timer timer;
-    private TimerTask currentTask;
+    private final CompositeDisposable disposables = new CompositeDisposable();
+    private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     @Override
     public void onCreate() {
         super.onCreate();
-        startPrayerTimeMonitoring();
+//        startForeground(1, notificationHelper.createServiceNotification());
+        startMonitoring();
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        super.onStartCommand(intent, flags, startId);
-        return START_STICKY;
+    private void startMonitoring() {
+        // Har minutda tekshirish
+        disposables.add(Observable.interval(0, 1, TimeUnit.MINUTES)
+                .subscribe(tick -> checkPrayerTimes()));
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        super.onBind(intent);
-        return null;
-    }
+    private void checkPrayerTimes() {
+        Date now = new Date();
+        String currentDate = dateFormat.format(now);
+        String currentTime = timeFormat.format(now);
 
-    private void startPrayerTimeMonitoring() {
-        if (timer != null) {
-            timer.cancel();
-        }
-        timer = new Timer();
-
+        // Juma kunini tekshirish
         Calendar calendar = Calendar.getInstance();
-        Date startDate = calendar.getTime();
-        calendar.add(Calendar.MONTH, 1);
-        Date endDate = calendar.getTime();
+        calendar.setTime(now);
+        boolean isJuma = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY;
 
-        prayerTimeRepository.getPrayerTimesByDateRange(startDate, endDate)
-                .observeForever(prayerTimes -> {
-                    if (prayerTimes != null) {
-                        for (PrayerTime prayerTime : prayerTimes) {
-                            schedulePrayerTimeNotifications(prayerTime);
-                        }
+        disposables.add(
+            settingsRepository.getSettingsSync()
+                .subscribe(settings -> {
+                    if (isJuma && settings.isJumaSettingsEnabled()) {
+                        handleJumaSettings(settings, currentTime);
                     }
-                });
 
+                    if (settings.isNotificationsEnabled()) {
+                        checkUnnotifiedPrayerTimes(settings, currentDate, currentTime);
+                    }
+                })
+        );
     }
 
-    private void schedulePrayerTimeNotifications(PrayerTime prayerTime) {
-        notificationSettingsRepository.getSettings().observe(this, settings -> {
-            if (settings != null) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(prayerTime.getDate());
-
-                // Schedule Fajr notifications
-                scheduleNotification(prayerTime.getFajr(), "Bomdod", settings.getFajrReminderMinutes());
-
-                // Schedule Dhuhr notifications
-                scheduleNotification(prayerTime.getDhuhr(), "Peshin", settings.getDhuhrReminderMinutes());
-
-                // Schedule Asr notifications
-                scheduleNotification(prayerTime.getAsr(), "Asr", settings.getAsrReminderMinutes());
-
-                // Schedule Maghrib notifications
-                scheduleNotification(prayerTime.getMaghrib(), "Shom", settings.getMaghribReminderMinutes());
-
-                // Schedule Isha notifications
-                scheduleNotification(prayerTime.getIsha(), "Xufton", settings.getIshaReminderMinutes());
-
-                // Schedule Juma silent mode if enabled
-                if (settings.isJumaEnabled() && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY) {
-                    scheduleJumaSilentMode(settings.getJumaStartTime(), settings.getJumaEndTime());
-                }
-            }
-        });
+    private void handleJumaSettings(Settings settings, String currentTime) {
+//        if (isTimeBetween(currentTime, settings.getJumaStartTime(), settings.getJumaEndTime())) {
+//            if (!audioHelper.isSilentModeEnabled()) {
+//                audioHelper.enableSilentMode();
+//            }
+//        } else {
+//            if (audioHelper.isSilentModeEnabled()) {
+//                audioHelper.disableSilentMode();
+//            }
+//        }
     }
 
-    private void scheduleNotification(Date prayerTime, String prayerName, int reminderMinutes) {
-        Date currentTime = new Date();
-        long timeDiff = prayerTime.getTime() - currentTime.getTime();
-        long reminderTime = timeDiff - (reminderMinutes * 60 * 1000L);
+    private void checkUnnotifiedPrayerTimes(Settings settings, String currentDate, String currentTime) {
+        disposables.add(
+            prayerTimeRepository.getUnnotifiedPrayerTimes(currentDate, currentTime)
+                .subscribe(prayerTimes -> {
+                    for (PrayerTime prayerTime : prayerTimes) {
+                        handlePrayerTime(prayerTime, settings);
+                    }
+                })
+        );
+    }
 
-        if (reminderTime > 0) {
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    notificationHelper.showPrayerTimeNotification(prayerName, String.valueOf(reminderMinutes));
-                    silentModeHelper.enableSilentMode();
-                    new Timer().schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            silentModeHelper.disableSilentMode();
-                        }
-                    }, reminderMinutes * 60 * 1000L);
-                }
-            };
-            timer.schedule(task, reminderTime);
+    private void handlePrayerTime(PrayerTime prayerTime, Settings settings) {
+        // Bildirishnoma yuborish
+        notificationHelper.showPrayerTimeNotification(prayerTime.getName(), prayerTime.getTime());
+
+        // Ovozsiz rejimni yoqish
+        if (settings.isSilentModeEnabled() && audioHelper.hasNotificationPolicyAccess()) {
+            audioHelper.enableSilentMode();
+            // Belgilangan vaqtdan keyin ovozsiz rejimni o'chirish
+            disposables.add(
+                Observable.timer(settings.getDefaultSilentModeDuration(), TimeUnit.MINUTES)
+                    .subscribe(tick -> audioHelper.disableSilentMode())
+            );
         }
+
+        // Bildirishnoma yuborilganini belgilash
+//        disposables.add(
+//            prayerTimeRepository.markPrayerTimeAsNotified(prayerTime.getId())
+//                .subscribe()
+//        );
     }
 
-    private void scheduleJumaSilentMode(String startTime, String endTime) {
-        Calendar calendar = Calendar.getInstance();
-        Date currentTime = calendar.getTime();
-
-        String[] startParts = startTime.split(":");
-        String[] endParts = endTime.split(":");
-        int startHour = Integer.parseInt(startParts[0]);
-        int startMinute = Integer.parseInt(startParts[1]);
-        int endHour = Integer.parseInt(endParts[0]);
-        int endMinute = Integer.parseInt(endParts[1]);
-
-        calendar.set(Calendar.HOUR_OF_DAY, startHour);
-        calendar.set(Calendar.MINUTE, startMinute);
-        calendar.set(Calendar.SECOND, 0);
-
-        long startTimeInMillis = calendar.getTimeInMillis();
-        long timeDiff = startTimeInMillis - currentTime.getTime();
-
-        if (timeDiff > 0) {
-            TimerTask task = new TimerTask() {
-                @Override
-                public void run() {
-                    silentModeHelper.enableSilentMode();
-
-                    calendar.set(Calendar.HOUR_OF_DAY, endHour);
-                    calendar.set(Calendar.MINUTE, endMinute);
-                    calendar.set(Calendar.SECOND, 0);
-
-                    long endTimeInMillis = calendar.getTimeInMillis();
-                    long duration = endTimeInMillis - startTimeInMillis;
-
-                    new Timer().schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            silentModeHelper.disableSilentMode();
-                        }
-                    }, duration);
-                }
-            };
-            timer.schedule(task, timeDiff);
-        }
+    private boolean isTimeBetween(String currentTime, String startTime, String endTime) {
+        return currentTime.compareTo(startTime) >= 0 && currentTime.compareTo(endTime) <= 0;
     }
 
     @Override
     public void onDestroy() {
-
         super.onDestroy();
+        disposables.clear();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     public String getCurrentPrayerTime() {
-        AtomicReference<String> result = new AtomicReference<>("");
-        prayerTimeRepository.getCurrentPrayerTime().observe(this, prayerTime -> {
-            if (prayerTime != null) {
-                //current prayer time
-                result.set(this.getPrayTime(prayerTime, new Time(System.currentTimeMillis())));
-            }
-        });
-        return result.get();
+        return "";
     }
 
     public void updatePrayerTimes(double latitude, double longitude) {
-    }
-
-    public String getNextPrayTime(String currentPrayTime){
-        return   switch(currentPrayTime){
-            case "Bomdod" -> "Quyosh";
-            case "Quyosh" -> "Peshin";
-            case "Peshin" -> "Asr";
-            case "Asr" -> "Shom";
-            case "Shom" -> "Xufton";
-            default -> "Bomdod";
-        };
-    }
-    public String getPrayTime(PrayerTime prayerTime, Time currentTime){
-        String currentPrayTime;
-        //check current time with prayer time
-        if(currentTime.after(prayerTime.getFajr()) && currentTime.before(prayerTime.getSunrise())){
-            currentPrayTime = "Bomdod";
-        }else if(currentTime.after(prayerTime.getSunrise()) && currentTime.before(prayerTime.getDhuhr())){
-            currentPrayTime = "Quyosh";
-        }else if (currentTime.after(prayerTime.getDhuhr()) && currentTime.before(prayerTime.getAsr())){
-            currentPrayTime = "Peshin";
-        }else if (currentTime.after(prayerTime.getAsr()) && currentTime.before(prayerTime.getMaghrib())){
-            currentPrayTime = "Asr";
-        }else if (currentTime.after(prayerTime.getMaghrib()) && currentTime.before(prayerTime.getIsha())){
-            currentPrayTime = "Shom";
-        }else {
-            currentPrayTime = "Xufton";
-        }
-        return currentPrayTime;
     }
 }

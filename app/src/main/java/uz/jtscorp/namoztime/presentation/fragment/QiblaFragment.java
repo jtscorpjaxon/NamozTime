@@ -14,23 +14,28 @@ import android.view.animation.RotateAnimation;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import uz.jtscorp.namoztime.databinding.FragmentQiblaBinding;
+import uz.jtscorp.namoztime.presentation.viewmodel.SettingsViewModel;
+import uz.jtscorp.namoztime.util.QiblaCalculator;
 
 import static android.content.Context.SENSOR_SERVICE;
 
 @AndroidEntryPoint
 public class QiblaFragment extends Fragment implements SensorEventListener {
     private FragmentQiblaBinding binding;
+    private SettingsViewModel viewModel;
     private SensorManager sensorManager;
     private float currentDegree = 0f;
-    private static final float QIBLA_DEGREE = 11.7f; // Olmaliq uchun qibla yo'nalishi
+    private float qiblaDegree = 0f;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sensorManager = (SensorManager) requireActivity().getSystemService(SENSOR_SERVICE);
+        viewModel = new ViewModelProvider(this).get(SettingsViewModel.class);
     }
 
     @Nullable
@@ -38,6 +43,23 @@ public class QiblaFragment extends Fragment implements SensorEventListener {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentQiblaBinding.inflate(inflater, container, false);
         return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        setupObservers();
+    }
+
+    private void setupObservers() {
+        viewModel.getSettings().observe(getViewLifecycleOwner(), settings -> {
+            qiblaDegree = QiblaCalculator.calculateQiblaDirection(
+                settings.getLatitude(),
+                settings.getLongitude()
+            );
+            binding.tvLocation.setText(settings.getLocation());
+            binding.tvQiblaDegree.setText(String.format("Qibla: %.1f°", qiblaDegree));
+        });
     }
 
     @Override
@@ -58,7 +80,7 @@ public class QiblaFragment extends Fragment implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         float degree = Math.round(event.values[0]);
-        float rotation = degree + QIBLA_DEGREE;
+        float rotation = degree + qiblaDegree;
 
         RotateAnimation rotateAnimation = new RotateAnimation(
                 currentDegree,
