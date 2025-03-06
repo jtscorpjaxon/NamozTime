@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Namoz vaqtlari</string>
+    <string name="next_prayer_time">Keyingi namoz vaqti</string>
+    <string name="prayer_times">Namoz vaqtlari</string>
+    <string name="notification_settings">Bildirishnoma sozlamalari</string>
+    <string name="fajr_reminder">Bomdod namoziga qoldirilgan vaqt (daqiqa)</string>
+    <string name="dhuhr_reminder">Peshin namoziga qoldirilgan vaqt (daqiqa)</string>
+    <string name="asr_reminder">Asr namoziga qoldirilgan vaqt (daqiqa)</string>
+    <string name="maghrib_reminder">Shom namoziga qoldirilgan vaqt (daqiqa)</string>
+    <string name="isha_reminder">Xufton namoziga qoldirilgan vaqt (daqiqa)</string>
+    <string name="juma_silent_mode">Juma kuni ovozsiz rejim</string>
+    <string name="juma_start_time">Boshlanish vaqti</string>
+    <string name="juma_end_time">Tugash vaqti</string>
+    <string name="save">Saqlash</string>
+    <string name="prayer_time_notification">%1$s namoziga %2$d daqiqa qoldi</string>
+</resources>
