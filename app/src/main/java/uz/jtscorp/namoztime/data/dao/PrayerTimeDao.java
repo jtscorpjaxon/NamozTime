@@ -16,7 +16,7 @@ public interface PrayerTimeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(PrayerTime prayerTime);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = PrayerTime.class)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<PrayerTime> prayerTimes);
 
     @Update
@@ -31,9 +31,12 @@ public interface PrayerTimeDao {
     @Query("SELECT * FROM prayer_times WHERE date = :date AND time <= :currentTime ORDER BY time DESC LIMIT 1")
     LiveData<PrayerTime> getCurrentPrayerTime(String date, String currentTime);
 
-    @Query("DELETE FROM prayer_times WHERE date < :date")
+    @Query("DELETE FROM prayer_times WHERE date <= :date")
     void deleteOldPrayerTimes(String date);
 
     @Query("SELECT * FROM prayer_times WHERE date = :date AND isNotified = 0 AND time > :currentTime ORDER BY time ASC")
     List<PrayerTime> getUnnotifiedPrayerTimes(String date, String currentTime);
+
+    @Query("SELECT * FROM prayer_times")
+    LiveData<List<PrayerTime>> getAllPrayerTimes();
 } 

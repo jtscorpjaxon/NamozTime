@@ -2,8 +2,11 @@ package uz.jtscorp.namoztime.data.repository;
 
 import androidx.lifecycle.LiveData;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -64,5 +67,9 @@ public class PrayerTimeRepository {
     public Completable updatePrayerTime(PrayerTime prayerTime) {
         return Completable.fromAction(() -> dao.update(prayerTime))
                 .subscribeOn(Schedulers.io());
+    }
+
+    public  LiveData<List<PrayerTime>> getAllPrayerTimes() {
+        return dao.getAllPrayerTimes();
     }
 } 

@@ -22,7 +22,7 @@ public class PrayerTimesViewModel extends ViewModel {
     private final PrayerTimeRepository prayerTimeRepository;
     private final SettingsRepository settingsRepository;
     private final CompositeDisposable disposables = new CompositeDisposable();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>();

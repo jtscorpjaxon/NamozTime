@@ -22,4 +22,5 @@
     <color name="md_theme_light_onBackground">#191C1A</color>
     <color name="md_theme_light_surface">#FBFDF9</color>
     <color name="md_theme_light_onSurface">#191C1A</color>
+    <color name="ic_launcher_background">#006C4C</color>
 </resources>
