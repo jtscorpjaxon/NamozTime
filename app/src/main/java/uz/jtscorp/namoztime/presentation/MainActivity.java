@@ -1,6 +1,7 @@
 package uz.jtscorp.namoztime.presentation;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -27,16 +28,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         viewModel = new ViewModelProvider(this).get(PrayerTimesViewModel.class);
 
-        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment);
-        if (navHostFragment != null) {
-            navController = navHostFragment.getNavController();
-            NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
-        }
-
+        setupNavigation();
         setSupportActionBar(binding.topAppBar);
     }
+    private void setupNavigation() {
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment == null) {
+            Log.e("MainActivity", "NavHostFragment topilmadi. activity_main.xml ni tekshiring.");
+            throw new IllegalStateException("NavHostFragment topilmadi!");
+        }
 
+        navController = navHostFragment.getNavController();
+        if (navController == null) {
+            Log.e("MainActivity", "NavController null bo‘lib qoldi. nav_graph.xml ni tekshiring.");
+            throw new IllegalStateException("NavController null!");
+        }
+
+        if (binding.bottomNavigation == null) {
+            Log.e("MainActivity", "BottomNavigationView null. activity_main.xml ni tekshiring.");
+            throw new IllegalStateException("BottomNavigationView topilmadi!");
+        }
+
+        NavigationUI.setupWithNavController(binding.bottomNavigation, navController);
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

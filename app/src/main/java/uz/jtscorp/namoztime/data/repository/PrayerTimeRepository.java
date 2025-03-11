@@ -15,6 +15,7 @@ import uz.jtscorp.namoztime.data.api.PrayerTimesApi;
 import uz.jtscorp.namoztime.data.dao.PrayerTimeDao;
 import uz.jtscorp.namoztime.data.entity.PrayerTime;
 import uz.jtscorp.namoztime.data.mapper.PrayerTimeMapper;
+import uz.jtscorp.namoztime.data.model.api.PrayerTimesResponse;
 
 @Singleton
 public class PrayerTimeRepository {
@@ -33,12 +34,12 @@ public class PrayerTimeRepository {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH) + 1;
-
-        return api.getMonthlyPrayerTimes(latitude, longitude, 3, month, year)
+        //get response from api
+        return api.getPrayerTimes(latitude, longitude, 3, month, year)
                 .map(mapper::mapToPrayerTimes)
                 .flatMapCompletable(prayerTimes -> Completable.fromAction(() -> {
-//                    dao.deleteOldPrayerTimes(prayerTimes.get(0).getDate());
-//                    dao.insertAll(prayerTimes);
+                    dao.deleteOldPrayerTimes(prayerTimes.get(0).getDate());
+                    dao.insertAll(prayerTimes);
                 }))
                 .subscribeOn(Schedulers.io());
     }

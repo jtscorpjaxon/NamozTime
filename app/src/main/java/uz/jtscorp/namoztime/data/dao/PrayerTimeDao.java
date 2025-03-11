@@ -16,7 +16,7 @@ public interface PrayerTimeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(PrayerTime prayerTime);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE, entity = PrayerTime.class)
     void insertAll(List<PrayerTime> prayerTimes);
 
     @Update
